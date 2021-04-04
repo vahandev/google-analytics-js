@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GA cookie rewrite JS</title>
+
+
+<script>
+// cookie value get function by cookie name
+function _getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+function set_session_cookie () {
+    // Change these to your domain
+    let session_cookie_endpoint= 'https://cookie.yourdomain.com';
+    let domain = 'yourdomain.com'; // cookie domain 
+    let CookieName = '_ga';
+    
+    let gaCookie_val = _getCookie( CookieName );
+    // this JS based cookie which we set once request is made to API is used to make sure we don't send API request on every pageview as it is not needed. 
+    // as it is not possible know expiration time of cookie via JS we have to request API and set expiration time to 2yrs every 6 days.
+    let ApiPoll = _getCookie('_ck_api_poll');
+   
+    // Only run if GA cookie is set and if API wasn't called in recent 6 days 
+    if (!gaCookie_val || ApiPoll) { 
+        return; 
+    }
+    
+    // once GA library sets cookie we send HTTP POST request to our cookie.yourdomain.com endpoint where we duplicate cookie as session cookie and send responce back. 
+    //Browser does update GA's set cookie with new one which has already 2yrs expiration 
+    let data = JSON.stringify({
+        name: CookieName, 
+        value: gaCookie_val,
+        path: '/', 
+        domain: domain         
+    });
+    
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', session_cookie_endpoint, true);
+    xhr.setRequestHeader('Content-Type', "application/x-www-form-urlencoded");
+    xhr.withCredentials = true; // XMLHttpRequest responses from a different domain cannot set cookie values for their own domain unless withCredentials is set to true
+    xhr.send( 'data='+encodeURIComponent(data)); // you can get values on server side by using $_POST['data']
+    //set internal usage cookie for preventing excessive API calls with 6 days expiration
+    document.cookie = '_ck_api_poll=true; domain=' + domain + '; path=/; max-age=' + (60*60*24*6);
+}
+
+
+
+</script>
+
+<script type="text/javascript">
+// Universal analytics
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','__gaTracker');
+
+__gaTracker('create',  {
+        //cookieName : '_ganew', //use this if you wish to change GA's default cookie name "_ga"
+        cookieDomain: 'auto', // this is important if you have subdomains that use the same tracker to make them cross domain
+        cookieUpdate: false, // this tells google analytics that once cookies are set don't try to update their expiration time. If it does update it will turn expiration dime to 7days again.
+        trackingId: 'UA-XXXXX-YYY' 
+      }, 
+      {'useAmpClientId': true} // if you have AMP pages this unifies session between AMP and non-AMP pages
+  );
+  
+//  __gaTracker('set', 'dimension1', 'dimension value' ); // optional
+
+__gaTracker('send', 'pageview', {'hitCallback': set_session_cookie} ); // use hitCall back to copy GA's set cookie when pageview hit is completed.
+// see https://github.com/vahandev/cookie for server side handling
+
+</script>
+
+
+
+</head>
+<body>
+
+</body>
+</html>
