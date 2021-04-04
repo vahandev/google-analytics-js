@@ -17,7 +17,7 @@ function _getCookie(name) {
     }
     return null;
 }
-function set_session_cookie () {
+function copy_js_cookie_into_http_cookie () {
     // Change these to your domain
     let session_cookie_endpoint= 'https://cookie.yourdomain.com';
     let domain = 'yourdomain.com'; // cookie domain 
@@ -64,17 +64,23 @@ function set_session_cookie () {
 
 __gaTracker('create',  {
         //cookieName : '_ganew', //use this if you wish to change GA's default cookie name "_ga"
-        cookieDomain: 'auto', // this is important if you have subdomains that use the same tracker to make them cross domain
+        cookieDomain: 'auto', //  Automatic cookie domain configuration sets the GA cookie on the highest level domain it can. this is important if you have subdomains that use the same tracker for cross domain tracking.
         cookieUpdate: false, // this tells google analytics that once cookies are set don't try to update their expiration time. If it does update it will turn expiration dime to 7days again.
-        trackingId: 'UA-XXXXX-YYY' 
+        trackingId: 'UA-XXXXX-YYY',
+        //name: 'newTracker', // you can change trackername if you want to have multiple GA trackings on site. 
       }, 
       {'useAmpClientId': true} // if you have AMP pages this unifies session between AMP and non-AMP pages
   );
   
 //  __gaTracker('set', 'dimension1', 'dimension value' ); // optional
+//  __gaTracker('newTracker.set', 'dimension1', 'dimension value' ); // if tracker name is set name: 'newTracker'
 
-__gaTracker('send', 'pageview', {'hitCallback': set_session_cookie} ); // use hitCall back to copy GA's set cookie when pageview hit is completed.
-// see https://github.com/vahandev/cookie for server side handling
+// use hitCallback function to know when GA's JS set cookie is set as soon as pageview hit is completed. 
+// see https://github.com/vahandev/cookie for server side handling 
+__gaTracker('send', 'pageview', {'hitCallback': copy_js_cookie_into_http_cookie } ); 
+//__gaTracker('newTracker.send', 'pageview', {'hitCallback': set_session_cookie} ); if tracker name is set name: 'newTracker'
+
+
 
 </script>
 
