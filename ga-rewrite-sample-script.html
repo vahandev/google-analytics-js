@@ -59,7 +59,7 @@ function copy_js_cookie_into_http_cookie () {
 // Universal analytics
 //When GA loads it sets it's cookies via javascript using document.cookie. 
 //Safari kills such cookies in 7 days whereas doesn't when cookies are set via HTTP headers. 
-//Idea is to make subdomain API and request it when GA does set it's cookie 
+//Idea is to make subdomain cookie.yourdomain.com API and request it when GA does set it's cookie 
 //which will copy and send back to browser the same cookie with clientID value with 2yrs expiration 
 //as HTTP cookie. 
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
